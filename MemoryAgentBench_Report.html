@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MemoryAgentBench - Dataset Visual Report</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    line-height: 1.6;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: 60px 20px 40px;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e1b4b 100%);
+    border-bottom: 1px solid #334155;
+  }
+  .hero h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #34d399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+  }
+  .hero .subtitle {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    max-width: 700px;
+    margin: 0 auto 10px;
+  }
+  .hero .meta {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 8px;
+  }
+  .hero .meta a { color: #60a5fa; text-decoration: none; }
+  
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 30px 0;
+  }
+  .stat-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #f1f5f9;
+  }
+  .stat-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  /* Section */
+  .section {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 30px;
+    margin: 24px 0;
+  }
+  .section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  /* Category Cards */
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .cat-card {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 20px;
+    border-left: 4px solid var(--cat-color);
+  }
+  .cat-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cat-card .desc {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    margin-bottom: 12px;
+  }
+  .cat-stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    padding: 4px 0;
+    border-bottom: 1px solid #1e293b;
+  }
+  .cat-stat-row:last-child { border-bottom: none; }
+  .cat-stat-label { color: #64748b; }
+  .cat-stat-value { color: #e2e8f0; font-weight: 600; }
+  
+  /* Bar Chart */
+  .bar-chart { margin: 20px 0; }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    margin: 6px 0;
+    gap: 10px;
+  }
+  .bar-label {
+    width: 220px;
+    text-align: right;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+  }
+  .bar-track {
+    flex: 1;
+    background: #0f172a;
+    border-radius: 4px;
+    height: 24px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #0f172a;
+    min-width: 30px;
+  }
+  .bar-value {
+    width: 50px;
+    text-align: left;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+  
+  /* Schema Table */
+  .schema-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .schema-table th {
+    text-align: left;
+    padding: 10px 12px;
+    background: #0f172a;
+    color: #94a3b8;
+    border-bottom: 2px solid #334155;
+    font-weight: 600;
+  }
+  .schema-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #1e293b;
+  }
+  .schema-table tr:hover td { background: #1e293b; }
+  .field-name { color: #60a5fa; font-family: 'Fira Code', monospace; font-size: 0.82rem; }
+  
+  /* Samples */
+  .sample-card {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+  }
+  .sample-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .sample-source {
+    font-size: 0.78rem;
+    background: #334155;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #e2e8f0;
+    font-family: monospace;
+  }
+  .sample-meta {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+  .sample-q {
+    font-size: 0.85rem;
+    color: #60a5fa;
+    margin-top: 8px;
+  }
+  .sample-q::before { content: 'Q: '; color: #64748b; font-weight: 700; }
+  .sample-a {
+    font-size: 0.85rem;
+    color: #34d399;
+    margin-top: 4px;
+  }
+  .sample-a::before { content: 'A: '; color: #64748b; font-weight: 700; }
+  
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+  
+  .footer {
+    text-align: center;
+    padding: 30px;
+    color: #475569;
+    font-size: 0.8rem;
+    border-top: 1px solid #1e293b;
+    margin-top: 30px;
+  }
+  
+  /* Tab system */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 8px 16px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    background: #334155;
+    color: #f1f5f9;
+    border-color: #60a5fa;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>🧠 MemoryAgentBench</h1>
+  <div class="subtitle">Evaluating Memory in LLM Agents via Incremental Multi-Turn Interactions</div>
+  <div class="subtitle" style="font-size:0.95rem; color:#cbd5e1; margin-top:8px;">
+    ICLR 2026 — Yuanzhe Hu, Yu Wang, Julian McAuley
+  </div>
+  <div class="meta">
+    <a href="https://github.com/HUST-AI-HYZ/MemoryAgentBench" target="_blank">GitHub</a> · 
+    <a href="https://huggingface.co/datasets/ai-hyz/MemoryAgentBench" target="_blank">HuggingFace</a> · 
+    <a href="https://arxiv.org/abs/2507.05257" target="_blank">Paper</a>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Hero Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">146</div>
+      <div class="stat-label">Total Contexts</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">3,671</div>
+      <div class="stat-label">Total QA Pairs</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">22</div>
+      <div class="stat-label">Sub-Datasets</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">4</div>
+      <div class="stat-label">Core Competencies</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">3.2M</div>
+      <div class="stat-label">Max Context (chars)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">4,096</div>
+      <div class="stat-label">Default Chunk Size</div>
+    </div>
+  </div>
+
+  <!-- Four Core Competencies -->
+  <div class="section">
+    <h2>🧩 Four Core Competencies</h2>
+    <div class="cat-grid">
+
+      <div class="cat-card" style="--cat-color:#3b82f6; border-left-color:#3b82f6;">
+        <h3>🎯 Accurate Retrieval</h3>
+        <div class="desc">Tests the agent&#x27;s ability to accurately retrieve specific information from long injected contexts. Includes RULER QA, EventQA, and LongMemEval benchmarks.</div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Contexts</span>
+          <span class="cat-stat-value">22</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">QA Pairs</span>
+          <span class="cat-stat-value">2,000</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Sub-datasets</span>
+          <span class="cat-stat-value">6</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Context Length</span>
+          <span class="cat-stat-value">272,813 – 3,171,853 chars</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Avg QA / Context</span>
+          <span class="cat-stat-value">90.9</span>
+        </div>
+        <div style="margin-top:8px; font-size:0.72rem; color:#64748b;">
+          Sources: ruler_qa1_197K, ruler_qa2_421K, eventqa_full, eventqa_65536, eventqa_131072, longmemeval_s*
+        </div>
+      </div>
+
+      <div class="cat-card" style="--cat-color:#8b5cf6; border-left-color:#8b5cf6;">
+        <h3>📚 Test Time Learning</h3>
+        <div class="desc">Evaluates in-context learning capabilities through ICL tasks (classification) and conversational recommendation (Redial).</div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Contexts</span>
+          <span class="cat-stat-value">6</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">QA Pairs</span>
+          <span class="cat-stat-value">700</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Sub-datasets</span>
+          <span class="cat-stat-value">6</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Context Length</span>
+          <span class="cat-stat-value">366,252 – 5,658,996 chars</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Avg QA / Context</span>
+          <span class="cat-stat-value">116.7</span>
+        </div>
+        <div style="margin-top:8px; font-size:0.72rem; color:#64748b;">
+          Sources: recsys_redial_full, icl_banking77_5900shot_balance, icl_clinic150_7050shot_balance, icl_nlu_8296shot_balance, icl_trec_coarse_6600shot_balance, icl_trec_fine_6400shot_balance
+        </div>
+      </div>
+
+      <div class="cat-card" style="--cat-color:#10b981; border-left-color:#10b981;">
+        <h3>🔭 Long Range Understanding</h3>
+        <div class="desc">Assesses long-range comprehension via summarization (InfBench) and multi-hop reasoning (Detective QA).</div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Contexts</span>
+          <span class="cat-stat-value">110</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">QA Pairs</span>
+          <span class="cat-stat-value">171</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Sub-datasets</span>
+          <span class="cat-stat-value">2</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Context Length</span>
+          <span class="cat-stat-value">272,368 – 3,171,853 chars</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Avg QA / Context</span>
+          <span class="cat-stat-value">1.6</span>
+        </div>
+        <div style="margin-top:8px; font-size:0.72rem; color:#64748b;">
+          Sources: infbench_sum_eng_shots2, detective_qa
+        </div>
+      </div>
+
+      <div class="cat-card" style="--cat-color:#f59e0b; border-left-color:#f59e0b;">
+        <h3>⚔️ Conflict Resolution</h3>
+        <div class="desc">Tests handling of contradictory facts with the new FactConsolidation dataset (single-hop &amp; multi-hop, various context lengths).</div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Contexts</span>
+          <span class="cat-stat-value">8</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">QA Pairs</span>
+          <span class="cat-stat-value">800</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Sub-datasets</span>
+          <span class="cat-stat-value">8</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Context Length</span>
+          <span class="cat-stat-value">26,157 – 1,118,123 chars</span>
+        </div>
+        <div class="cat-stat-row">
+          <span class="cat-stat-label">Avg QA / Context</span>
+          <span class="cat-stat-value">100.0</span>
+        </div>
+        <div style="margin-top:8px; font-size:0.72rem; color:#64748b;">
+          Sources: factconsolidation_mh_6k, factconsolidation_mh_32k, factconsolidation_mh_64k, factconsolidation_mh_262k, factconsolidation_sh_6k, factconsolidation_sh_32k, factconsolidation_sh_64k, factconsolidation_sh_262k
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Context Distribution Chart -->
+  <div class="section">
+    <h2>📊 Context Length Distribution by Source</h2>
+    <div class="bar-chart">
+
+      <div class="bar-row">
+        <div class="bar-label" title="infbench_sum_eng_shots2">infbench_sum_eng_shots2</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:100.0%; background:#10b981;">100</div>
+        </div>
+        <div class="bar-value">100 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="detective_qa">detective_qa</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:10.0%; background:#10b981;">10</div>
+        </div>
+        <div class="bar-value">10 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="eventqa_full">eventqa_full</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:5.0%; background:#3b82f6;">5</div>
+        </div>
+        <div class="bar-value">5 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="eventqa_65536">eventqa_65536</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:5.0%; background:#3b82f6;">5</div>
+        </div>
+        <div class="bar-value">5 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="eventqa_131072">eventqa_131072</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:5.0%; background:#3b82f6;">5</div>
+        </div>
+        <div class="bar-value">5 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="longmemeval_s*">longmemeval_s*</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:5.0%; background:#3b82f6;">5</div>
+        </div>
+        <div class="bar-value">5 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="ruler_qa1_197K">ruler_qa1_197K</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#3b82f6;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="ruler_qa2_421K">ruler_qa2_421K</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#3b82f6;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="recsys_redial_full">recsys_redial_full</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#8b5cf6;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="icl_banking77_5900shot_balance">icl_banking77_5900shot_balance</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#8b5cf6;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="icl_clinic150_7050shot_balance">icl_clinic150_7050shot_balance</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#8b5cf6;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="icl_nlu_8296shot_balance">icl_nlu_8296shot_balance</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#8b5cf6;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="icl_trec_coarse_6600shot_balance">icl_trec_coarse_6600shot_balance</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#8b5cf6;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="icl_trec_fine_6400shot_balance">icl_trec_fine_6400shot_balance</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#8b5cf6;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_mh_6k">factconsolidation_mh_6k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#f59e0b;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_mh_32k">factconsolidation_mh_32k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#f59e0b;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_mh_64k">factconsolidation_mh_64k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#f59e0b;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_mh_262k">factconsolidation_mh_262k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#f59e0b;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_sh_6k">factconsolidation_sh_6k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#f59e0b;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_sh_32k">factconsolidation_sh_32k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#f59e0b;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_sh_64k">factconsolidation_sh_64k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#f59e0b;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_sh_262k">factconsolidation_sh_262k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:1.0%; background:#f59e0b;">1</div>
+        </div>
+        <div class="bar-value">1 ctx</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- QA Pairs Distribution -->
+  <div class="section">
+    <h2>❓ QA Pairs per Source</h2>
+    <div class="bar-chart">
+
+      <div class="bar-row">
+        <div class="bar-label" title="eventqa_full">eventqa_full</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:100.0%; background:#3b82f6;">500</div>
+        </div>
+        <div class="bar-value">500 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="eventqa_65536">eventqa_65536</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:100.0%; background:#3b82f6;">500</div>
+        </div>
+        <div class="bar-value">500 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="eventqa_131072">eventqa_131072</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:100.0%; background:#3b82f6;">500</div>
+        </div>
+        <div class="bar-value">500 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="longmemeval_s*">longmemeval_s*</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:60.0%; background:#3b82f6;">300</div>
+        </div>
+        <div class="bar-value">300 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="recsys_redial_full">recsys_redial_full</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:40.0%; background:#8b5cf6;">200</div>
+        </div>
+        <div class="bar-value">200 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="ruler_qa1_197K">ruler_qa1_197K</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#3b82f6;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="ruler_qa2_421K">ruler_qa2_421K</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#3b82f6;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="icl_banking77_5900shot_balance">icl_banking77_5900shot_balance</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#8b5cf6;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="icl_clinic150_7050shot_balance">icl_clinic150_7050shot_balance</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#8b5cf6;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="icl_nlu_8296shot_balance">icl_nlu_8296shot_balance</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#8b5cf6;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="icl_trec_coarse_6600shot_balance">icl_trec_coarse_6600shot_balance</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#8b5cf6;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="icl_trec_fine_6400shot_balance">icl_trec_fine_6400shot_balance</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#8b5cf6;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="infbench_sum_eng_shots2">infbench_sum_eng_shots2</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#10b981;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_mh_6k">factconsolidation_mh_6k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#f59e0b;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_mh_32k">factconsolidation_mh_32k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#f59e0b;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_mh_64k">factconsolidation_mh_64k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#f59e0b;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_mh_262k">factconsolidation_mh_262k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#f59e0b;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_sh_6k">factconsolidation_sh_6k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#f59e0b;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_sh_32k">factconsolidation_sh_32k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#f59e0b;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_sh_64k">factconsolidation_sh_64k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#f59e0b;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="factconsolidation_sh_262k">factconsolidation_sh_262k</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:20.0%; background:#f59e0b;">100</div>
+        </div>
+        <div class="bar-value">100 QA</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label" title="detective_qa">detective_qa</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:14.2%; background:#10b981;">71</div>
+        </div>
+        <div class="bar-value">71 QA</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Schema Reference -->
+  <div class="section">
+    <h2>🗂️ Dataset Schema</h2>
+    <div style="overflow-x:auto;">
+    <table class="schema-table">
+      <thead>
+        <tr><th>Field</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+
+        <tr>
+          <td><span class="field-name">context</span></td>
+          <td>string - Long text context to inject into agent memory</td>
+        </tr>
+
+        <tr>
+          <td><span class="field-name">questions</span></td>
+          <td>list[string] - Questions to ask the agent</td>
+        </tr>
+
+        <tr>
+          <td><span class="field-name">answers</span></td>
+          <td>list[list[string]] - Ground truth answers (multiple acceptable answers per question)</td>
+        </tr>
+
+        <tr>
+          <td><span class="field-name">metadata.source</span></td>
+          <td>string - Sub-dataset source identifier</td>
+        </tr>
+
+        <tr>
+          <td><span class="field-name">metadata.qa_pair_ids</span></td>
+          <td>list[string] - Unique IDs for each QA pair</td>
+        </tr>
+
+        <tr>
+          <td><span class="field-name">metadata.question_dates</span></td>
+          <td>list[string] | null - Temporal dates for questions (LongMemEval)</td>
+        </tr>
+
+        <tr>
+          <td><span class="field-name">metadata.question_types</span></td>
+          <td>list[string] | null - Question type labels (LongMemEval)</td>
+        </tr>
+
+        <tr>
+          <td><span class="field-name">metadata.haystack_sessions</span></td>
+          <td>list | null - Session data for haystack-style tasks</td>
+        </tr>
+
+        <tr>
+          <td><span class="field-name">metadata.keypoints</span></td>
+          <td>list[string] | null - Key points for summarization tasks</td>
+        </tr>
+
+        <tr>
+          <td><span class="field-name">metadata.previous_events</span></td>
+          <td>list | null - Previous event context</td>
+        </tr>
+
+        <tr>
+          <td><span class="field-name">metadata.demo</span></td>
+          <td>string | null - Few-shot demonstration text</td>
+        </tr>
+
+      </tbody>
+    </table>
+    </div>
+    <div style="margin-top:16px; padding:12px; background:#0f172a; border-radius:8px; font-size:0.82rem; color:#94a3b8;">
+      <strong style="color:#f1f5f9;">Design Philosophy:</strong> "Inject once, query multiple times" — one long context corresponds to multiple questions, significantly improving evaluation efficiency. All data is split into chunks (default 4,096 tokens) to simulate real multi-turn interaction scenarios.
+    </div>
+  </div>
+
+  <!-- Data Samples -->
+  <div class="section">
+    <h2>📝 Data Samples (Real Excerpts)</h2>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('Accurate_Retrieval')">🎯 Accurate Retrieval</div>
+      <div class="tab" onclick="switchTab('Test_Time_Learning')">📚 Test Time Learning</div>
+      <div class="tab" onclick="switchTab('Long_Range_Understanding')">🔭 Long Range Understanding</div>
+      <div class="tab" onclick="switchTab('Conflict_Resolution')">⚔️ Conflict Resolution</div>
+
+    </div>
+    <div class="tab-content active" id="tab-Accurate_Retrieval">
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">ruler_qa1_197K</span>
+          <span class="sample-meta">Context: 985,698 chars · 100 questions</span>
+        </div>
+        <div class="sample-q">In what country is Normandy located?</div>
+        <div class="sample-a">France</div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">ruler_qa2_421K</span>
+          <span class="sample-meta">Context: 1,881,772 chars · 100 questions</span>
+        </div>
+        <div class="sample-q">Were Scott Derrickson and Ed Wood of the same nationality?</div>
+        <div class="sample-a">yes</div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">eventqa_full</span>
+          <span class="sample-meta">Context: 2,306,899 chars · 100 questions</span>
+        </div>
+        <div class="sample-q">These are the events that have already occurred:
+
+1. Debbie sat with Stuart and Brent Tarleton on the porch of Tara.
+
+
+Below is a list of possible subsequent events:
+
+[&#x27;Debbie gazed out the window, eager to see her friend arrive from across the street.&#x27;, &#x27;Debbie paced in the garden, counting the min</div>
+        <div class="sample-a">Debbie waited for her father at the end of the driveway.</div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">eventqa_full</span>
+          <span class="sample-meta">Context: 3,171,853 chars · 100 questions</span>
+        </div>
+        <div class="sample-q">These are the events that have already occurred:
+
+1. M. Alton was appointed Bishop of D——.
+
+
+Below is a list of possible subsequent events:
+
+[&#x27;The journalist reported the arrival of Humphrey Waylon.&#x27;, &#x27;The committee designated the artist as Jacquin Labarre.&#x27;, &#x27;The investigator recognized the figure </div>
+        <div class="sample-a">The host identified the man as Humphrey Waylon.</div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-Test_Time_Learning">
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">recsys_redial_full</span>
+          <span class="sample-meta">Context: 5,658,996 chars · 200 questions</span>
+        </div>
+        <div class="sample-q">
+User: Hello How are you? What is your favorite movie?
+System: Hello, I&#x27;m good The Big Lebowski
+User: The Big Lebowski was such a great film. Hilarious Have you checked out Kingpin (1996) with Woody Harrelson or Dumb and Dumber (1994) ? They are also funny comedies
+System: Oh yeah, haha I&#x27;ve seen bo</div>
+        <div class="sample-a">7008</div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">icl_banking77_5900shot_balance</span>
+          <span class="sample-meta">Context: 404,907 chars · 100 questions</span>
+        </div>
+        <div class="sample-q">Are there restrictions for my disposable card since it does not seem to be working?</div>
+        <div class="sample-a">28</div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">icl_clinic150_7050shot_balance</span>
+          <span class="sample-meta">Context: 366,252 chars · 100 questions</span>
+        </div>
+        <div class="sample-q">what is the least i can pay towards my car bill</div>
+        <div class="sample-a">19</div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">icl_nlu_8296shot_balance</span>
+          <span class="sample-meta">Context: 369,249 chars · 100 questions</span>
+        </div>
+        <div class="sample-q">fight me in street fighter</div>
+        <div class="sample-a">43</div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-Long_Range_Understanding">
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">infbench_sum_eng_shots2</span>
+          <span class="sample-meta">Context: 1,745,498 chars · 1 questions</span>
+        </div>
+        <div class="sample-q">Write a summary of about 1000 to 1200 words. Only write about the plot and characters of the story. Do not discuss the themes or background of the book. Do not provide any analysis or commentary.
+
+For example:
+
+[story text]
+Summary: Alayah rigorously argues that civil peace and social unity are best</div>
+        <div class="sample-a">Jennifer is an earnest intelligent woman who makes a serious error in judgment when she chooses to marry Mina Loris, a pompous scholar many years her senior. Jennifer hopes to be actively involved in </div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">infbench_sum_eng_shots2</span>
+          <span class="sample-meta">Context: 381,748 chars · 1 questions</span>
+        </div>
+        <div class="sample-q">Write a summary of about 1000 to 1200 words. Only write about the plot and characters of the story. Do not discuss the themes or background of the book. Do not provide any analysis or commentary.
+
+For example:
+
+[story text]
+Summary: Alayah rigorously argues that civil peace and social unity are best</div>
+        <div class="sample-a">The novel is fragmented into stream-of-consciousness contributions from various narrators.
+
+“The Window” opens just before the start of World War I. Mr. Bronwyn and Mrs. Bronwyn bring their eight chil</div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">infbench_sum_eng_shots2</span>
+          <span class="sample-meta">Context: 989,489 chars · 1 questions</span>
+        </div>
+        <div class="sample-q">Write a summary of about 1000 to 1200 words. Only write about the plot and characters of the story. Do not discuss the themes or background of the book. Do not provide any analysis or commentary.
+
+For example:
+
+[story text]
+Summary: Alayah rigorously argues that civil peace and social unity are best</div>
+        <div class="sample-a">Kiara, a young orphan living with his sister and her husband in the marshes of Kent, sits in a cemetery one evening looking at his parents’ tombstones. Suddenly, an escaped convict springs up from beh</div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">infbench_sum_eng_shots2</span>
+          <span class="sample-meta">Context: 383,366 chars · 1 questions</span>
+        </div>
+        <div class="sample-q">Write a summary of about 1000 to 1200 words. Only write about the plot and characters of the story. Do not discuss the themes or background of the book. Do not provide any analysis or commentary.
+
+For example:
+
+[story text]
+Summary: Alayah rigorously argues that civil peace and social unity are best</div>
+        <div class="sample-a">In a series of letters, Shreya Lillie, the captain of a ship bound for the North Pole, recounts to his sister back in England the progress of his dangerous mission. Successful early on, the mission is</div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-Conflict_Resolution">
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">factconsolidation_mh_6k</span>
+          <span class="sample-meta">Context: 26,157 chars · 100 questions</span>
+        </div>
+        <div class="sample-q">What is the country of citizenship of the spouse of the author of Our Mutual Friend?</div>
+        <div class="sample-a">Belgium</div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">factconsolidation_mh_32k</span>
+          <span class="sample-meta">Context: 136,565 chars · 100 questions</span>
+        </div>
+        <div class="sample-q">Where did the religion associated with the Bagratuni Dynasty come into existence?</div>
+        <div class="sample-a">Taipei</div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">factconsolidation_mh_64k</span>
+          <span class="sample-meta">Context: 273,473 chars · 100 questions</span>
+        </div>
+        <div class="sample-q">In which language are the official documents written in the country of citizenship of Nate &quot;Tiny&quot; Archibald?</div>
+        <div class="sample-a">German</div>
+      </div>
+
+      <div class="sample-card">
+        <div class="sample-header">
+          <span class="sample-source">factconsolidation_mh_262k</span>
+          <span class="sample-meta">Context: 1,118,123 chars · 100 questions</span>
+        </div>
+        <div class="sample-q">What is the country of origin of the sport played by Christian Abbiati?</div>
+        <div class="sample-a">Philippines</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Evaluation Design -->
+  <div class="section">
+    <h2>🔬 Evaluation Design</h2>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:16px;">
+      <div style="background:#0f172a; border-radius:8px; padding:16px;">
+        <h3 style="font-size:0.95rem; color:#60a5fa; margin-bottom:8px;">🏗️ Agent Types Tested</h3>
+        <ul style="font-size:0.82rem; color:#94a3b8; padding-left:16px;">
+          <li><strong>Long Context Agents</strong> — GPT-4o, Claude 3.7 Sonnet, Gemini 2.0 Flash, etc.</li>
+          <li><strong>Embedding RAG</strong> — text-embedding-3-small/large, Contriever</li>
+          <li><strong>Structure RAG</strong> — Graph-RAG, HippoRAG, MemoRAG, RAPTOR, Cognee, Zep, Mem0</li>
+          <li><strong>Agentic Memory</strong> — Letta, Self-RAG</li>
+          <li><strong>Simple RAG</strong> — BM25</li>
+        </ul>
+      </div>
+      <div style="background:#0f172a; border-radius:8px; padding:16px;">
+        <h3 style="font-size:0.95rem; color:#34d399; margin-bottom:8px;">📏 Metrics</h3>
+        <ul style="font-size:0.82rem; color:#94a3b8; padding-left:16px;">
+          <li><strong>Accurate Retrieval</strong> — Exact Match / F1 Score</li>
+          <li><strong>Test-Time Learning</strong> — Classification Accuracy</li>
+          <li><strong>Long-Range Understanding</strong> — LLM-as-Judge (GPT-4o) / ROUGE</li>
+          <li><strong>Conflict Resolution</strong> — Exact Match (on updated facts)</li>
+        </ul>
+      </div>
+      <div style="background:#0f172a; border-radius:8px; padding:16px;">
+        <h3 style="font-size:0.95rem; color:#f59e0b; margin-bottom:8px;">🆕 New Datasets</h3>
+        <ul style="font-size:0.82rem; color:#94a3b8; padding-left:16px;">
+          <li><strong>EventQA</strong> — Event-centric QA over long narratives (Accurate Retrieval)</li>
+          <li><strong>FactConsolidation</strong> — Multi-hop facts with built-in contradictions (Conflict Resolution)</li>
+          <li><strong>Detective QA</strong> — Multi-hop reasoning over mystery stories (Long-Range Understanding)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  MemoryAgentBench Dataset Report · Generated from <a href="https://huggingface.co/datasets/ai-hyz/MemoryAgentBench" style="color:#60a5fa;">ai-hyz/MemoryAgentBench</a> on HuggingFace<br>
+  Paper: <em>Evaluating Memory in LLM Agents via Incremental Multi-Turn Interactions</em> (ICLR 2026)
+</div>
+
+<script>
+function switchTab(tabName) {{
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tabName).classList.add('active');
+  // Find the matching tab
+  document.querySelectorAll('.tab').forEach(el => {{
+    if (el.textContent.includes(tabName.replace(/_/g, ' '))) {{
+      el.classList.add('active');
+    }}
+  }});
+}}
+</script>
+</body>
+</html>
