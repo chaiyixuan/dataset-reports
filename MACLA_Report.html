@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MACLA Dataset Report</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --card-hover: #22263a;
+    --border: #2a2e3e;
+    --text: #e1e4eb;
+    --muted: #8b8fa3;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --pink: #ec4899;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --teal: #14b8a6;
+    --orange: #f97316;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0;
+  }
+  .hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #1e1b4b 100%);
+    padding: 48px 32px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 50%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(139,92,246,0.1) 0%, transparent 50%);
+  }
+  .hero h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 8px; position:relative; }
+  .hero .subtitle { color: var(--muted); font-size: 1.1rem; position:relative; }
+  .hero .badge {
+    display: inline-block;
+    background: rgba(99,102,241,0.2);
+    color: var(--accent2);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-top: 12px;
+    position: relative;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .stat-card .label { color: var(--muted); font-size: 0.85rem; margin-bottom: 4px; }
+  .stat-card .value { font-size: 1.8rem; font-weight: 700; }
+  .stat-card .sub { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+  .section { margin-bottom: 40px; }
+  .section-title {
+    font-size: 1.4rem; font-weight: 700; margin-bottom: 16px;
+    padding-bottom: 8px; border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; margin-bottom: 16px;
+  }
+  .card h3 { font-size: 1.1rem; margin-bottom: 12px; color: var(--accent2); }
+  .bar-chart { margin: 12px 0; }
+  .bar-row { display: flex; align-items: center; margin-bottom: 8px; gap: 12px; }
+  .bar-label { min-width: 180px; font-size: 0.9rem; text-align: right; color: var(--muted); }
+  .bar-track {
+    flex: 1; height: 28px; background: rgba(255,255,255,0.05);
+    border-radius: 4px; overflow: hidden; position: relative;
+  }
+  .bar-value {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    font-size: 0.8rem; font-weight: 600; color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th {
+    background: rgba(99,102,241,0.1); color: var(--accent2);
+    padding: 10px 12px; text-align: left; font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  code {
+    background: rgba(99,102,241,0.15); color: var(--accent2);
+    padding: 2px 6px; border-radius: 4px; font-size: 0.85rem;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .code-block {
+    background: #0d0f15; border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.82rem; overflow-x: auto; line-height: 1.5; color: #c9d1d9;
+  }
+  .kw { color: #ff7b72; }
+  .str { color: #a5d6ff; }
+  .comment { color: #8b949e; }
+  .num { color: #79c0ff; }
+  .tag {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 0.78rem; font-weight: 500; margin: 2px;
+  }
+  .tag-blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .tag-green { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .tag-purple { background: rgba(139,92,246,0.15); color: #a78bfa; }
+  .tag-pink { background: rgba(236,72,153,0.15); color: #f472b6; }
+  .tag-yellow { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .tag-teal { background: rgba(20,184,166,0.15); color: #2dd4bf; }
+  .tag-orange { background: rgba(249,115,22,0.15); color: #fb923c; }
+  .arch-box {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; text-align: center; background: var(--card);
+  }
+  .arch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+    width: 2px; background: var(--border);
+  }
+  .timeline-item {
+    position: relative; margin-bottom: 20px; padding: 12px 16px;
+    background: var(--card); border-radius: 8px; border: 1px solid var(--border);
+  }
+  .timeline-item::before {
+    content: ''; position: absolute; left: -20px; top: 16px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--bg);
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .arch-grid { grid-template-columns: 1fr 1fr; }
+    .bar-label { min-width: 120px; font-size: 0.8rem; }
+  }
+  .highlight { color: var(--accent2); font-weight: 600; }
+  .green-text { color: var(--green); }
+  .red-text { color: var(--red); }
+  .muted { color: var(--muted); }
+  footer {
+    text-align: center; padding: 32px; color: var(--muted);
+    font-size: 0.85rem; border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🧠 MACLA</h1>
+  <div class="subtitle">Memory-Augmented Continual Learning for Agents</div>
+  <div class="badge">AAMAS 2026 · Oral Presentation · RMIT University</div>
+</div>
+<div class="container">
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">Code Lines</div>
+      <div class="value">2,623</div>
+      <div class="sub">Single-file implementation</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Benchmarks</div>
+      <div class="value">4</div>
+      <div class="sub">ALFWorld · WebShop · TravelPlanner · InterCodeSQL</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Avg Performance</div>
+      <div class="value" style="color:var(--green)">78.1%</div>
+      <div class="sub">Across all 4 benchmarks</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">ALFWorld Unseen</div>
+      <div class="value" style="color:var(--teal)">90.3%</div>
+      <div class="sub">+3.1% generalization gap</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Training Speed</div>
+      <div class="value" style="color:var(--yellow)">56s</div>
+      <div class="sub">2,800× faster than LLM fine-tuning</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Procedures Extracted</div>
+      <div class="value" style="color:var(--pink)">187</div>
+      <div class="sub">From 2,851 trajectories (93.4% compression)</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Classes / Functions</div>
+      <div class="value">18 / 95</div>
+      <div class="sub">Well-structured Python codebase</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">LLM Call Reduction</div>
+      <div class="value" style="color:var(--green)">85%+</div>
+      <div class="sub">2 calls vs 16-20 in ReAct</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📋 Overview</div>
+    <div class="card">
+      <p style="margin-bottom:12px">
+        <strong>MACLA</strong> is a domain-agnostic continual learning framework that enables LLM-based agents to learn from experience through <span class="highlight">structured procedural memory</span>. Unlike traditional approaches that require extensive fine-tuning or per-step LLM reasoning, MACLA achieves state-of-the-art performance by:
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <span class="tag tag-blue">Bayesian Selection</span>
+        <span class="tag tag-purple">Procedural Memory</span>
+        <span class="tag tag-pink">Meta-Procedures</span>
+        <span class="tag tag-green">Contrastive Learning</span>
+        <span class="tag tag-yellow">Hierarchical Memory</span>
+        <span class="tag tag-teal">Frozen LLM</span>
+      </div>
+      <p class="muted">
+        The framework <strong>decouples reasoning from learning</strong> by maintaining a frozen LLM while performing all adaptation in an external hierarchical procedural memory. This enables sample-efficient, interpretable, and continually improving agents without LLM parameter updates.
+      </p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🏗️ Memory Hierarchy</div>
+    <div class="card">
+      <p style="margin-bottom:16px" class="muted">MACLA uses a 4-level hierarchical memory system with increasing abstraction:</p>
+      <div class="arch-grid">
+
+        <div class="arch-box" style="border-color:#3b82f640">
+          <div style="font-size:1.4rem;margin-bottom:4px;color:#3b82f6">Atomic</div>
+          <div style="font-weight:700;margin-bottom:4px">Atomic Memory</div>
+          <div style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">Raw action-observation pairs</div>
+          <div style="font-size:1.6rem;font-weight:800;color:#3b82f6">N_a = 2000</div>
+        </div>
+
+        <div class="arch-box" style="border-color:#8b5cf640">
+          <div style="font-size:1.4rem;margin-bottom:4px;color:#8b5cf6">Sequential</div>
+          <div style="font-weight:700;margin-bottom:4px">Sequential Memory</div>
+          <div style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">Trajectory segments</div>
+          <div style="font-size:1.6rem;font-weight:800;color:#8b5cf6">N_s = 100</div>
+        </div>
+
+        <div class="arch-box" style="border-color:#ec489940">
+          <div style="font-size:1.4rem;margin-bottom:4px;color:#ec4899">Procedural</div>
+          <div style="font-weight:700;margin-bottom:4px">Procedural Memory</div>
+          <div style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">Parameterized reusable skills</div>
+          <div style="font-size:1.6rem;font-weight:800;color:#ec4899">N_p = 200</div>
+        </div>
+
+        <div class="arch-box" style="border-color:#f59e0b40">
+          <div style="font-size:1.4rem;margin-bottom:4px;color:#f59e0b">Meta-Procedural</div>
+          <div style="font-weight:700;margin-bottom:4px">Meta-Procedural Memory</div>
+          <div style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">Hierarchical compositions</div>
+          <div style="font-size:1.6rem;font-weight:800;color:#f59e0b">N_m = 50</div>
+        </div>
+
+      </div>
+      <div class="bar-chart" style="margin-top:20px">
+        <div style="font-weight:600;margin-bottom:8px">Relative Capacity</div>
+
+        <div class="bar-row">
+          <div class="bar-label">Atomic Memory (N_a)</div>
+          <div class="bar-track">
+            <div style="background:#3b82f6;height:100%;border-radius:4px;width:100.0%"></div>
+            <div class="bar-value">2000</div>
+          </div>
+        </div>
+
+        <div class="bar-row">
+          <div class="bar-label">Sequential Memory (N_s)</div>
+          <div class="bar-track">
+            <div style="background:#8b5cf6;height:100%;border-radius:4px;width:5.0%"></div>
+            <div class="bar-value">100</div>
+          </div>
+        </div>
+
+        <div class="bar-row">
+          <div class="bar-label">Procedural Memory (N_p)</div>
+          <div class="bar-track">
+            <div style="background:#ec4899;height:100%;border-radius:4px;width:10.0%"></div>
+            <div class="bar-value">200</div>
+          </div>
+        </div>
+
+        <div class="bar-row">
+          <div class="bar-label">Meta-Procedural Memory (N_m)</div>
+          <div class="bar-track">
+            <div style="background:#f59e0b;height:100%;border-radius:4px;width:2.5%"></div>
+            <div class="bar-value">50</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📊 Benchmark Datasets</div>
+
+    <div class="card">
+      <h3>ALFWorld <span class="muted" style="font-weight:400;font-size:0.9rem">&mdash; Embodied Household Tasks</span></h3>
+      <p style="margin-bottom:12px">Text-based simulation of household tasks (pick-and-place, cooling, heating, cleaning, etc.)</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.88rem;margin-bottom:12px">
+        <div><strong>Files:</strong> <code>alfworld_train.json</code>, <code>alfworld_valid_seen.json</code>, <code>alfworld_valid_unseen.json</code></div>
+        <div><strong>Split:</strong> 3 separate files (train / valid_seen / valid_unseen)</div>
+      </div>
+      <div style="margin-bottom:8px"><strong>Actions:</strong> <span class="tag tag-blue">go to</span> <span class="tag tag-blue">take</span> <span class="tag tag-blue">open</span> <span class="tag tag-blue">put</span> <span class="tag tag-blue">cool</span> <span class="tag tag-blue">heat</span> <span class="tag tag-blue">clean</span> <span class="tag tag-blue">use</span> <span class="tag tag-blue">examine</span> <span class="tag tag-blue">turn on/off</span></div>
+      
+        <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
+          <div class="stat-card" style="flex:1;min-width:120px;padding:12px">
+            <div class="label">Seen Accuracy</div>
+            <div class="value" style="font-size:1.4rem;color:var(--blue)">87.2%</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:120px;padding:12px">
+            <div class="label">Unseen Accuracy</div>
+            <div class="value" style="font-size:1.4rem;color:var(--green)">90.3%</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:120px;padding:12px">
+            <div class="label">Generalization Gap</div>
+            <div class="value" style="font-size:1.4rem;color:var(--green)">+3.1%</div>
+          </div>
+        </div>
+
+    </div>
+
+    <div class="card">
+      <h3>WebShop <span class="muted" style="font-weight:400;font-size:0.9rem">&mdash; E-Commerce Product Search</span></h3>
+      <p style="margin-bottom:12px">Product search and selection via conversational interaction with an e-commerce platform</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.88rem;margin-bottom:12px">
+        <div><strong>Files:</strong> <code>webshop_sft.txt (JSON format)</code></div>
+        <div><strong>Split:</strong> Auto-split (70% train / 15% val_seen / 15% val_unseen)</div>
+      </div>
+      <div style="margin-bottom:8px"><strong>Actions:</strong> <span class="tag tag-green">search[query]</span> <span class="tag tag-green">click[button/option]</span> <span class="tag tag-green">buy</span></div>
+      
+    </div>
+
+    <div class="card">
+      <h3>TravelPlanner <span class="muted" style="font-weight:400;font-size:0.9rem">&mdash; Multi-Constraint Travel Planning</span></h3>
+      <p style="margin-bottom:12px">Complex travel itinerary planning with multiple constraints (budget, time, preferences)</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.88rem;margin-bottom:12px">
+        <div><strong>Files:</strong> <code>travelplanner_test_synthetic.txt</code>, <code>travelplanner_validation_synthetic.txt</code></div>
+        <div><strong>Split:</strong> Combined + random split (70/15/15)</div>
+      </div>
+      <div style="margin-bottom:8px"><strong>Actions:</strong> <span class="tag tag-purple">search</span> <span class="tag tag-purple">plan_route</span> <span class="tag tag-purple">book</span> <span class="tag tag-purple">adjust</span></div>
+      
+    </div>
+
+    <div class="card">
+      <h3>InterCodeSQL <span class="muted" style="font-weight:400;font-size:0.9rem">&mdash; Database Query Generation</span></h3>
+      <p style="margin-bottom:12px">SQL query generation for database interaction tasks</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.88rem;margin-bottom:12px">
+        <div><strong>Files:</strong> <code>intercode_sql.txt (JSON format)</code></div>
+        <div><strong>Split:</strong> Auto-split (70/15/15)</div>
+      </div>
+      <div style="margin-bottom:8px"><strong>Actions:</strong> <span class="tag tag-orange">SQL SELECT/JOIN/AGG queries</span></div>
+      
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">🗂️ Trajectory Data Schema</div>
+    <div class="card">
+      <p style="margin-bottom:12px" class="muted">Each loaded trajectory follows this unified schema across all benchmarks:</p>
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+<tr><td><code>id</code></td><td>str</td><td>Unique trajectory identifier</td></tr>
+<tr><td><code>task</code></td><td>str</td><td>Task description / instruction</td></tr>
+<tr><td><code>actions</code></td><td>List[str]</td><td>Sequence of actions taken</td></tr>
+<tr><td><code>observations</code></td><td>List[str]</td><td>Observations received</td></tr>
+<tr><td><code>action_observation_pairs</code></td><td>List[Dict]</td><td>Paired action-observation tuples</td></tr>
+<tr><td><code>success</code></td><td>bool</td><td>Whether the trajectory was successful</td></tr>
+<tr><td><code>think_steps</code></td><td>List[str]</td><td>Chain-of-thought reasoning steps</td></tr>
+<tr><td><code>raw_text</code></td><td>str</td><td>Original raw trajectory text</td></tr>
+<tr><td><code>source_file</code></td><td>str</td><td>Source file identifier</td></tr>
+<tr><td><code>trajectory_path</code></td><td>List[Dict]</td><td>Detailed step-by-step path</td></tr>
+<tr><td><code>reward</code></td><td>float</td><td>Cumulative reward (0.0 or 1.0 default)</td></tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🧱 Core Data Structures</div>
+
+    <div class="card">
+      <h3>AtomicMemoryEntry</h3>
+      <p style="margin-bottom:10px" class="muted">Raw action-observation pairs from agent interactions</p>
+      <div><span class="tag tag-blue">action</span><span class="tag tag-blue">observation</span><span class="tag tag-blue">reward</span><span class="tag tag-blue">context</span><span class="tag tag-blue">trajectory_id</span><span class="tag tag-blue">step_index</span><span class="tag tag-blue">timestamp</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Procedure</h3>
+      <p style="margin-bottom:10px" class="muted">Parameterized reusable skill with Bayesian tracking</p>
+      <div><span class="tag tag-pink">goal</span><span class="tag tag-pink">preconditions</span><span class="tag tag-pink">steps</span><span class="tag tag-pink">postconditions</span><span class="tag tag-pink">concepts</span><span class="tag tag-pink">alpha</span><span class="tag tag-pink">beta</span><span class="tag tag-pink">execution_count</span><span class="tag tag-pink">generalizability_score</span><span class="tag tag-pink">confidence</span><span class="tag tag-pink">source_trajectory</span></div>
+    </div>
+
+    <div class="card">
+      <h3>MetaProcedure</h3>
+      <p style="margin-bottom:10px" class="muted">Hierarchical composition of multiple Procedures</p>
+      <div><span class="tag tag-purple">goal_meta</span><span class="tag tag-purple">preconditions_meta</span><span class="tag tag-purple">sub_procedures</span><span class="tag tag-purple">composition_policy</span><span class="tag tag-purple">alpha</span><span class="tag tag-purple">beta</span><span class="tag tag-purple">execution_count</span></div>
+    </div>
+
+    <div class="card">
+      <h3>ContrastiveContext</h3>
+      <p style="margin-bottom:10px" class="muted">Context for contrastive learning (success vs failure)</p>
+      <div><span class="tag tag-yellow">observation_init</span><span class="tag tag-yellow">action_sequence</span><span class="tag tag-yellow">observation_term</span><span class="tag tag-yellow">cumulative_reward</span><span class="tag tag-yellow">trajectory_id</span><span class="tag tag-yellow">success</span></div>
+    </div>
+
+    <div class="card">
+      <h3>ProceduralMemoryEntry</h3>
+      <p style="margin-bottom:10px" class="muted">Memory entry combining Procedure with contrastive evidence</p>
+      <div><span class="tag tag-teal">procedure</span><span class="tag tag-teal">success_contexts</span><span class="tag tag-teal">failure_contexts</span><span class="tag tag-teal">discriminative_patterns</span><span class="tag tag-teal">contexts</span><span class="tag tag-teal">goals</span><span class="tag tag-teal">performance_score</span><span class="tag tag-teal">last_refined</span></div>
+    </div>
+
+    <div class="card">
+      <h3>PerformanceMetrics</h3>
+      <p style="margin-bottom:10px" class="muted">Comprehensive evaluation metrics</p>
+      <div><span class="tag tag-green">avg_reward</span><span class="tag tag-green">accuracy</span><span class="tag tag-green">precision</span><span class="tag tag-green">recall</span><span class="tag tag-green">f1_score</span><span class="tag tag-green">success_rate</span><span class="tag tag-green">num_successful</span><span class="tag tag-green">num_total</span><span class="tag tag-green">mean_posterior_entropy</span><span class="tag tag-green">calibration_score</span><span class="tag tag-green">uncertainty_reduction</span><span class="tag tag-green">meta_procedure_usage_rate</span><span class="tag tag-green">composition_success_rate</span><span class="tag tag-green">procedures_refined</span><span class="tag tag-green">refinement_improvement</span><span class="tag tag-green">avg_inference_time</span><span class="tag tag-green">memory_utilization</span></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">🔬 Ablation Study Results</div>
+    <div class="card">
+      <p style="margin-bottom:16px" class="muted">Impact of removing each component from the full system on ALFWorld:</p>
+      <table>
+        <thead><tr><th>Configuration</th><th>Seen %</th><th>Unseen %</th><th>Procedures</th><th>Reuse Rate</th><th>LLM Calls</th></tr></thead>
+        <tbody>
+<tr style="font-weight:700;color:var(--green)">
+      <td>Full MACLA</td>
+      <td>87.2%</td>
+      <td>90.3%</td>
+      <td>187</td>
+      <td>78%</td>
+      <td>6.2</td>
+    </tr>
+<tr>
+      <td>w/o Bayesian Selection</td>
+      <td>79.4%</td>
+      <td>81.2%</td>
+      <td>189</td>
+      <td>62%</td>
+      <td>8.4</td>
+    </tr>
+<tr>
+      <td>w/o Contrastive</td>
+      <td>83.6%</td>
+      <td>85.7%</td>
+      <td>201</td>
+      <td>71%</td>
+      <td>6.8</td>
+    </tr>
+<tr>
+      <td>w/o Meta-Procedures</td>
+      <td>81.2%</td>
+      <td>78.4%</td>
+      <td>193</td>
+      <td>65%</td>
+      <td>9.1</td>
+    </tr>
+<tr>
+      <td>w/o Ontology</td>
+      <td>82.8%</td>
+      <td>84.1%</td>
+      <td>185</td>
+      <td>74%</td>
+      <td>6.5</td>
+    </tr>
+
+        </tbody>
+      </table>
+      
+      <div style="margin-top:24px">
+        <div style="font-weight:600;margin-bottom:12px">Seen Accuracy by Configuration</div>
+        <div class="bar-chart">
+
+          <div class="bar-row">
+            <div class="bar-label">Full MACLA</div>
+            <div class="bar-track">
+              <div style="background:var(--green);height:100%;border-radius:4px;width:87.2%"></div>
+              <div class="bar-value">87.2%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">w/o Bayesian Selection</div>
+            <div class="bar-track">
+              <div style="background:var(--blue);height:100%;border-radius:4px;width:79.4%"></div>
+              <div class="bar-value">79.4%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">w/o Contrastive</div>
+            <div class="bar-track">
+              <div style="background:var(--blue);height:100%;border-radius:4px;width:83.6%"></div>
+              <div class="bar-value">83.6%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">w/o Meta-Procedures</div>
+            <div class="bar-track">
+              <div style="background:var(--blue);height:100%;border-radius:4px;width:81.2%"></div>
+              <div class="bar-value">81.2%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">w/o Ontology</div>
+            <div class="bar-track">
+              <div style="background:var(--blue);height:100%;border-radius:4px;width:82.8%"></div>
+              <div class="bar-value">82.8%</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      
+      <div style="margin-top:20px">
+        <div style="font-weight:600;margin-bottom:12px">Unseen Accuracy by Configuration</div>
+        <div class="bar-chart">
+
+          <div class="bar-row">
+            <div class="bar-label">Full MACLA</div>
+            <div class="bar-track">
+              <div style="background:var(--teal);height:100%;border-radius:4px;width:90.3%"></div>
+              <div class="bar-value">90.3%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">w/o Bayesian Selection</div>
+            <div class="bar-track">
+              <div style="background:var(--purple);height:100%;border-radius:4px;width:81.2%"></div>
+              <div class="bar-value">81.2%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">w/o Contrastive</div>
+            <div class="bar-track">
+              <div style="background:var(--purple);height:100%;border-radius:4px;width:85.7%"></div>
+              <div class="bar-value">85.7%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">w/o Meta-Procedures</div>
+            <div class="bar-track">
+              <div style="background:var(--purple);height:100%;border-radius:4px;width:78.4%"></div>
+              <div class="bar-value">78.4%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">w/o Ontology</div>
+            <div class="bar-track">
+              <div style="background:var(--purple);height:100%;border-radius:4px;width:84.1%"></div>
+              <div class="bar-value">84.1%</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📈 Memory Capacity Analysis</div>
+    <div class="card">
+      <p style="margin-bottom:16px" class="muted">Effect of procedural/meta-procedural capacity on performance (N_p / N_m):</p>
+      <table>
+        <thead><tr><th>Capacity (N_p / N_m)</th><th>Actual Procedures</th><th>Seen %</th><th>Unseen %</th><th>Avg α/(α+β)</th></tr></thead>
+        <tbody>
+<tr>
+      <td>25 / 5</td>
+      <td>25</td>
+      <td>68.3%</td>
+      <td>64.1%</td>
+      <td>0.61</td>
+    </tr>
+<tr>
+      <td>50 / 10</td>
+      <td>50</td>
+      <td>76.5%</td>
+      <td>74.2%</td>
+      <td>0.68</td>
+    </tr>
+<tr>
+      <td>100 / 20</td>
+      <td>98</td>
+      <td>83.1%</td>
+      <td>85.6%</td>
+      <td>0.74</td>
+    </tr>
+<tr style="font-weight:700;color:var(--green)">
+      <td>200 / 50</td>
+      <td>187</td>
+      <td>87.2%</td>
+      <td>90.3%</td>
+      <td>0.79</td>
+    </tr>
+<tr>
+      <td>300 / 75</td>
+      <td>203</td>
+      <td>87.1%</td>
+      <td>90.1%</td>
+      <td>0.79</td>
+    </tr>
+
+        </tbody>
+      </table>
+      
+      <div style="margin-top:20px">
+        <div style="font-weight:600;margin-bottom:12px">Accuracy vs Memory Capacity</div>
+        <div class="bar-chart">
+
+          <div class="bar-row">
+            <div class="bar-label">Seen @ 25 / 5</div>
+            <div class="bar-track">
+              <div style="background:var(--blue);height:100%;border-radius:4px;width:68.3%"></div>
+              <div class="bar-value">68.3%</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Unseen @ 25 / 5</div>
+            <div class="bar-track">
+              <div style="background:var(--purple);height:100%;border-radius:4px;width:64.1%"></div>
+              <div class="bar-value">64.1%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">Seen @ 50 / 10</div>
+            <div class="bar-track">
+              <div style="background:var(--blue);height:100%;border-radius:4px;width:76.5%"></div>
+              <div class="bar-value">76.5%</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Unseen @ 50 / 10</div>
+            <div class="bar-track">
+              <div style="background:var(--purple);height:100%;border-radius:4px;width:74.2%"></div>
+              <div class="bar-value">74.2%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">Seen @ 100 / 20</div>
+            <div class="bar-track">
+              <div style="background:var(--blue);height:100%;border-radius:4px;width:83.1%"></div>
+              <div class="bar-value">83.1%</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Unseen @ 100 / 20</div>
+            <div class="bar-track">
+              <div style="background:var(--purple);height:100%;border-radius:4px;width:85.6%"></div>
+              <div class="bar-value">85.6%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">Seen @ 200 / 50</div>
+            <div class="bar-track">
+              <div style="background:var(--green);height:100%;border-radius:4px;width:87.2%"></div>
+              <div class="bar-value">87.2%</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Unseen @ 200 / 50</div>
+            <div class="bar-track">
+              <div style="background:var(--teal);height:100%;border-radius:4px;width:90.3%"></div>
+              <div class="bar-value">90.3%</div>
+            </div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label">Seen @ 300 / 75</div>
+            <div class="bar-track">
+              <div style="background:var(--blue);height:100%;border-radius:4px;width:87.1%"></div>
+              <div class="bar-value">87.1%</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Unseen @ 300 / 75</div>
+            <div class="bar-track">
+              <div style="background:var(--purple);height:100%;border-radius:4px;width:90.1%"></div>
+              <div class="bar-value">90.1%</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📈 Learning Dynamics (ALFWorld)</div>
+    <div class="card">
+      <p style="margin-bottom:16px" class="muted">Three emergent phases during training on 2,851 ALFWorld trajectories:</p>
+      <div class="timeline">
+
+        <div class="timeline-item" style="border-left:3px solid var(--blue)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <strong style="color:var(--blue)">Phase 1: Exploration</strong>
+            <span class="muted">Trajectories 0 - 570</span>
+          </div>
+          <div style="margin-bottom:4px"><strong>Success:</strong> 15% to 45%</div>
+          <div style="margin-bottom:4px"><strong>Procedures:</strong> 70</div>
+          <div class="muted">Rapid procedure extraction from diverse trajectories</div>
+        </div>
+
+        <div class="timeline-item" style="border-left:3px solid var(--purple)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <strong style="color:var(--purple)">Phase 2: Consolidation</strong>
+            <span class="muted">Trajectories 571 - 1,425</span>
+          </div>
+          <div style="margin-bottom:4px"><strong>Success:</strong> 45% to 82%</div>
+          
+          <div class="muted">Contrastive refinement activates, quality improves</div>
+        </div>
+
+        <div class="timeline-item" style="border-left:3px solid var(--green)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <strong style="color:var(--green)">Phase 3: Exploitation</strong>
+            <span class="muted">Trajectories 1,426 - 2,851</span>
+          </div>
+          <div style="margin-bottom:4px"><strong>Success:</strong> 82% to 87.2%</div>
+          <div style="margin-bottom:4px"><strong>Procedures:</strong> 187</div>
+          <div class="muted">Memory saturation, marginal gains</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">⚙️ Key Algorithmic Components</div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>🎲 Bayesian Selection</h3>
+        <p class="muted" style="margin-bottom:8px">Uncertainty-aware procedure ranking using Beta posterior distributions:</p>
+        <div class="code-block"><span class="comment"># Beta-Bernoulli posterior</span>
+success_rate = α / (α + β)
+variance = (α × β) / (n² × (n + 1))
+
+<span class="comment"># Expected utility scoring</span>
+score = success_rate × reward_expected
+      + exploration_bonus × √variance</div>
+        <p style="margin-top:8px;font-size:0.85rem">
+          <span class="green-text">Largest gain component</span> &mdash; removing it drops accuracy by 9.1%
+        </p>
+      </div>
+      <div class="card">
+        <h3>🔄 Contrastive Refinement</h3>
+        <p class="muted" style="margin-bottom:8px">Quality improvement by contrasting success vs failure contexts:</p>
+        <div class="code-block"><span class="comment"># Extract discriminative patterns</span>
+for procedure in memory:
+    success_ctx = get_success_contexts(proc)
+    failure_ctx = get_failure_contexts(proc)
+    patterns = extract_discriminative(
+        success_ctx, failure_ctx
+    )
+    refine_procedure(proc, patterns)</div>
+        <p style="margin-top:8px;font-size:0.85rem">
+          Requires min 5 success + 5 failure examples per procedure
+        </p>
+      </div>
+      <div class="card">
+        <h3>🏗️ Meta-Procedure Learning</h3>
+        <p class="muted" style="margin-bottom:8px">Hierarchical composition of atomic procedures:</p>
+        <div class="code-block"><span class="comment"># Meta-procedure composition</span>
+meta_proc = MetaProcedure(
+    goal_meta=<span class="str">"compound_task"</span>,
+    sub_procedures=[<span class="str">"cooling"</span>, <span class="str">"placement"</span>],
+    composition_policy={
+        <span class="str">"order"</span>: <span class="str">"sequential"</span>,
+        <span class="str">"dependencies"</span>: {
+            <span class="str">"placement"</span>: [<span class="str">"cooling"</span>]
+        }
+    }
+)</div>
+        <p style="margin-top:8px;font-size:0.85rem">
+          <span class="red-text">Critical for unseen tasks</span> &mdash; removing drops unseen by 11.9%
+        </p>
+      </div>
+      <div class="card">
+        <h3>🧊 Frozen LLM Strategy</h3>
+        <p class="muted" style="margin-bottom:8px">All adaptation happens externally &mdash; no parameter updates:</p>
+        <div class="code-block"><span class="comment"># Build memory in 56 seconds</span>
+<span class="comment"># 2,851 trajectories -&gt; 187 procedures</span>
+<span class="comment"># Compression: 93.4%</span>
+
+agent = LLMMACLAAgent(
+    N_a=<span class="num">2000</span>,  <span class="comment"># Atomic</span>
+    N_p=<span class="num">200</span>,   <span class="comment"># Procedural</span>
+    N_m=<span class="num">50</span>,    <span class="comment"># Meta-procedural</span>
+    llm_model=<span class="str">"llama2:7b"</span>,
+    use_llm=<span class="kw">True</span>
+)</div>
+        <p style="margin-top:8px;font-size:0.85rem">
+          2,800× faster than LLM parameter-training baselines
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📝 Sample Trajectory Format (ALFWorld)</div>
+    <div class="card">
+      <p style="margin-bottom:12px" class="muted">Example of an ALFWorld trajectory in the ReAct format that MACLA processes:</p>
+      <div class="code-block"><span class="comment"># Trajectory ID: alfworld_train_0001</span>
+<span class="comment"># Task: put a chilled apple in the garbage can</span>
+
+Think: I need to find an apple first, then cool it, then put it in the garbage can.
+Action: go to countertop 1
+Observation: On the countertop 1, you see a apple 1, a bowl 1, and a mug 1.
+
+Think: I found an apple, let me take it.
+Action: take apple 1 from countertop 1
+Observation: You pick up the apple 1.
+
+Think: Now I need to cool the apple using the fridge.
+Action: go to fridge 1
+Observation: The fridge 1 is closed.
+
+Think: I need to open the fridge first.
+Action: open fridge 1
+Observation: You open the fridge 1. The fridge 1 is now open.
+
+Think: Now cool the apple.
+Action: cool apple 1 with fridge 1
+Observation: You cool the apple 1 using the fridge 1.
+
+Think: Now go to the garbage can and put the apple in.
+Action: go to garbage can 1
+Observation: On the garbage can 1, you see a newspaper 1.
+
+Think: Put the chilled apple in the garbage can.
+Action: put apple 1 in/on garbage can 1
+Observation: You put the apple 1 in/on the garbage can 1.
+
+<span class="comment"># Reward: 1.0</span>
+<span class="comment"># Success: True</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🛒 Sample Trajectory Format (WebShop)</div>
+    <div class="card">
+      <p style="margin-bottom:12px" class="muted">Example of a WebShop conversational episode:</p>
+      <div class="code-block">{
+  <span class="str">"id"</span>: <span class="str">"webshop_001"</span>,
+  <span class="str">"reward"</span>: <span class="num">1.0</span>,
+  <span class="str">"conversations"</span>: [
+    {<span class="str">"from"</span>: <span class="str">"human"</span>, <span class="str">"value"</span>: <span class="str">"[SEP] instruction: I want a blue shirt ..."</span>},
+    {<span class="str">"from"</span>: <span class="str">"gpt"</span>, <span class="str">"value"</span>: <span class="str">"Thought: I should search for blue shirts\nAction: search[blue shirt]"</span>},
+    {<span class="str">"from"</span>: <span class="str">"human"</span>, <span class="str">"value"</span>: <span class="str">"Observation: [Search results with 10 items]"</span>},
+    {<span class="str">"from"</span>: <span class="str">"gpt"</span>, <span class="str">"value"</span>: <span class="str">"Thought: Item 3 matches best\nAction: click[item 3]"</span>},
+    ...,
+    {<span class="str">"from"</span>: <span class="str">"gpt"</span>, <span class="str">"value"</span>: <span class="str">"Action: buy[item 3]"</span>}
+  ]
+}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔧 Data Loaders</div>
+    <div class="card">
+      <p style="margin-bottom:16px" class="muted">MACLA includes 4 specialized data loaders, one per benchmark domain:</p>
+      <table>
+        <thead><tr><th>Loader Class</th><th>Domain</th><th>Input Format</th><th>Split Strategy</th></tr></thead>
+        <tbody>
+          <tr><td><code>ALFWorldLikeLoader</code></td><td>ALFWorld</td><td>.txt (ReAct format)</td><td>3 separate files (train/valid_seen/valid_unseen)</td></tr>
+          <tr><td><code>WebShopLoader</code></td><td>WebShop</td><td>JSON (conversations)</td><td>Auto-split 70/15/15</td></tr>
+          <tr><td><code>TravelPlannerLoader</code></td><td>TravelPlanner</td><td>JSON/TXT (synthetic)</td><td>Combined + random 70/15/15</td></tr>
+          <tr><td><code>SQLLoader</code></td><td>InterCodeSQL</td><td>JSON (queries)</td><td>Auto-split 70/15/15 with gold-as-success</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔄 Learning Pipeline</div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:20px 0;font-size:0.95rem">
+        <div style="background:var(--blue);color:white;padding:10px 16px;border-radius:8px;font-weight:600">Trajectory</div>
+        <span style="color:var(--muted);font-size:1.2rem">→</span>
+        <div style="background:var(--purple);color:white;padding:10px 16px;border-radius:8px;font-weight:600">LLM Segmentation</div>
+        <span style="color:var(--muted);font-size:1.2rem">→</span>
+        <div style="background:var(--pink);color:white;padding:10px 16px;border-radius:8px;font-weight:600">Procedure Extraction</div>
+        <span style="color:var(--muted);font-size:1.2rem">→</span>
+        <div style="background:var(--yellow);color:white;padding:10px 16px;border-radius:8px;font-weight:600">Bayesian Update</div>
+        <span style="color:var(--muted);font-size:1.2rem">→</span>
+        <div style="background:var(--teal);color:white;padding:10px 16px;border-radius:8px;font-weight:600">Contrastive Refinement</div>
+        <span style="color:var(--muted);font-size:1.2rem">→</span>
+        <div style="background:var(--green);color:white;padding:10px 16px;border-radius:8px;font-weight:600">Meta-Procedure</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🎯 Key Findings</div>
+    <div class="card">
+      <ul style="list-style:none;padding:0">
+        <li style="margin-bottom:12px;padding-left:24px;position:relative">
+          <span style="position:absolute;left:0;color:var(--green)">✓</span>
+          <strong>Bayesian selection</strong> provides the largest single gain &mdash; removing it drops accuracy by <span class="red-text">9.1%</span>
+        </li>
+        <li style="margin-bottom:12px;padding-left:24px;position:relative">
+          <span style="position:absolute;left:0;color:var(--green)">✓</span>
+          <strong>Meta-procedures</strong> are critical for unseen tasks &mdash; removing drops unseen by <span class="red-text">11.9%</span>
+        </li>
+        <li style="margin-bottom:12px;padding-left:24px;position:relative">
+          <span style="position:absolute;left:0;color:var(--green)">✓</span>
+          <strong>Positive generalization gap</strong> of +3.1% on ALFWorld unseen tasks &mdash; better on novel scenarios
+        </li>
+        <li style="margin-bottom:12px;padding-left:24px;position:relative">
+          <span style="position:absolute;left:0;color:var(--green)">✓</span>
+          <strong>Memory compression:</strong> 2,851 trajectories → 187 procedures (93.4% reduction)
+        </li>
+        <li style="margin-bottom:12px;padding-left:24px;position:relative">
+          <span style="position:absolute;left:0;color:var(--green)">✓</span>
+          <strong>78% procedure reuse rate</strong> &mdash; most learned skills are actively used
+        </li>
+        <li style="margin-bottom:12px;padding-left:24px;position:relative">
+          <span style="position:absolute;left:0;color:var(--green)">✓</span>
+          <strong>56 seconds</strong> to build full memory &mdash; <span class="green-text">2,800×</span> faster than fine-tuning baselines
+        </li>
+        <li style="margin-bottom:12px;padding-left:24px;position:relative">
+          <span style="position:absolute;left:0;color:var(--green)">✓</span>
+          All components contribute <strong>synergistically</strong> &mdash; no single ablation matches the full system
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📚 Citation</div>
+    <div class="card">
+      <div class="code-block" style="font-size:0.82rem">@inproceedings{macla2026,
+  title     = {MACLA: Memory-Augmented Continual Learning Agent},
+  author    = {Forouzandeh, Saman and Peng, Wei and Moradi, Parham
+               and Yu, Xinghuo and Jalili, Mahdi},
+  booktitle = {Proc. 25th Int. Conf. Autonomous Agents
+               and Multi-Agent Systems (AAMAS)},
+  year      = {2026},
+  publisher = {IFAAMAS},
+  note      = {Oral Presentation}
+}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔗 Resources</div>
+    <div class="card">
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <a href="https://github.com/S-Forouzandeh/MACLA-LLM-Agents-AAMAS-2026-Conference" style="color:var(--accent2);text-decoration:none;padding:8px 16px;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:6px">
+          <span>📂</span> GitHub Repository
+        </a>
+        <a href="https://arxiv.org/abs/2512.18950" style="color:var(--accent2);text-decoration:none;padding:8px 16px;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:6px">
+          <span>📄</span> arXiv Paper
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>MACLA Dataset Report &middot; Generated from <code>github.com/S-Forouzandeh/MACLA-LLM-Agents-AAMAS-2026-Conference</code></p>
+  <p style="margin-top:4px">arXiv: 2512.18950 &middot; AAMAS 2026 Oral</p>
+</footer>
+
+</body>
+</html>
