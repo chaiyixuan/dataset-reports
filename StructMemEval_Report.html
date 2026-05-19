@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StructMemEval - Dataset Visual Report</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f1117; color: #e1e4e8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .header { text-align: center; padding: 60px 20px 40px; background: linear-gradient(135deg, #1a1c2e 0%, #0f1117 100%); border-bottom: 1px solid #21262d; }
+  .header h1 { font-size: 2.8em; color: #58a6ff; margin-bottom: 10px; letter-spacing: -1px; }
+  .header .subtitle { font-size: 1.2em; color: #8b949e; margin-bottom: 8px; }
+  .header .meta { font-size: 0.9em; color: #6e7681; }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; background: #1f2937; color: #58a6ff; font-size: 0.85em; margin: 4px; border: 1px solid #30363d; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 30px 0; }
+  .stat-card { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 24px; text-align: center; transition: transform 0.2s, border-color 0.2s; }
+  .stat-card:hover { transform: translateY(-2px); border-color: #30363d; }
+  .stat-card .number { font-size: 2.5em; font-weight: 700; color: #58a6ff; }
+  .stat-card .label { font-size: 0.8em; color: #8b949e; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-card .icon { font-size: 1.5em; margin-bottom: 8px; }
+  .section { margin: 40px 0; }
+  .section-title { font-size: 1.6em; color: #e1e4e8; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #21262d; }
+  .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+  .cat-card { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 24px; border-left: 4px solid; }
+  .cat-card h3 { font-size: 1.2em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .cat-card .desc { color: #8b949e; font-size: 0.9em; margin-bottom: 12px; }
+  .cat-card .task { color: #58a6ff; font-size: 0.85em; padding: 6px 10px; background: #1f2937; border-radius: 6px; display: inline-block; }
+  .cat-card .file-count { color: #6e7681; font-size: 0.85em; margin-top: 8px; }
+  .chart-container { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 30px; margin: 20px 0; }
+  .chart-title { font-size: 1.1em; color: #e1e4e8; margin-bottom: 20px; }
+  .bar-group { margin: 10px 0; display: flex; align-items: center; gap: 12px; }
+  .bar-label { width: 130px; text-align: right; color: #8b949e; font-size: 0.9em; flex-shrink: 0; }
+  .bar-track { flex: 1; background: #21262d; border-radius: 6px; height: 28px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 10px; color: #fff; font-size: 0.85em; font-weight: 600; min-width: 40px; }
+  .sample-card { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 24px; margin: 16px 0; }
+  .sample-card h4 { color: #58a6ff; margin-bottom: 12px; font-size: 1.1em; }
+  .sample-card .case-id { color: #6e7681; font-size: 0.85em; margin-bottom: 12px; }
+  .msg-bubble { padding: 10px 16px; border-radius: 12px; margin: 6px 0; max-width: 80%; font-size: 0.9em; line-height: 1.5; }
+  .msg-user { background: #1f3a5f; margin-left: auto; border-bottom-right-radius: 4px; }
+  .msg-assistant { background: #1c2128; border: 1px solid #21262d; margin-right: auto; border-bottom-left-radius: 4px; }
+  .msg-role { font-size: 0.75em; color: #6e7681; margin-bottom: 2px; font-weight: 600; text-transform: uppercase; }
+  .query-box { background: #1a2332; border: 1px solid #1f3a5f; border-radius: 8px; padding: 14px; margin: 12px 0; font-size: 0.9em; }
+  .query-label { color: #58a6ff; font-weight: 600; font-size: 0.8em; margin-bottom: 4px; text-transform: uppercase; }
+  .schema-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+  .schema-table th { background: #1c2128; color: #58a6ff; padding: 12px 16px; text-align: left; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #21262d; }
+  .schema-table td { padding: 10px 16px; border-bottom: 1px solid #21262d; font-size: 0.9em; color: #c9d1d9; }
+  .schema-table tr:hover { background: #161b22; }
+  .schema-table code { background: #1c2128; padding: 2px 6px; border-radius: 4px; color: #79c0ff; font-size: 0.9em; }
+  .sys-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .sys-card { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 20px; }
+  .sys-card h4 { color: #58a6ff; margin-bottom: 8px; }
+  .sys-card p { color: #8b949e; font-size: 0.9em; }
+  .footer { text-align: center; padding: 40px 0; color: #6e7681; font-size: 0.85em; border-top: 1px solid #21262d; margin-top: 60px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } .cat-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🧠 StructMemEval</h1>
+  <div class="subtitle">Evaluating Memory Structure in LLM Agents</div>
+  <div class="meta">
+    <span class="badge">🏢 Yandex Research</span>
+    <span class="badge">📄 ArXiv 2602.11243</span>
+    <span class="badge">📊 5 Task Categories</span>
+    <span class="badge">🤖 3 Memory Systems</span>
+  </div>
+</div>
+<div class="container">
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="icon">📁</div><div class="number">177</div><div class="label">Benchmark JSON Files</div></div>
+    <div class="stat-card"><div class="icon">🎯</div><div class="number">5</div><div class="label">Task Categories</div></div>
+    <div class="stat-card"><div class="icon">⚙️</div><div class="number">14</div><div class="label">Dataset Configs</div></div>
+    <div class="stat-card"><div class="icon">💬</div><div class="number">54</div><div class="label">Prompt Templates</div></div>
+    <div class="stat-card"><div class="icon">🧩</div><div class="number">40</div><div class="label">Mem-Agent Instances</div></div>
+    <div class="stat-card"><div class="icon">📋</div><div class="number">12</div><div class="label">Eval QA Cases</div></div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">📂 Dataset Categories</h2>
+    <div class="cat-grid">
+<div class="cat-card" style="border-left-color: #f59e0b">
+        <h3><span>💰</span> Accounting</h3>
+        <div class="desc">Expense tracking &amp; debt settlement across groups of 3 people</div>
+        <div class="task">Arithmetic reasoning over shared expenses</div>
+        <div class="file-count">15 data files</div>
+      </div>
+<div class="cat-card" style="border-left-color: #3b82f6">
+        <h3><span>🗺️</span> State Machine Location</h3>
+        <div class="desc">Life events with location transitions, testing state tracking</div>
+        <div class="task">Recall current location after transitions</div>
+        <div class="file-count">35 data files</div>
+      </div>
+<div class="cat-card" style="border-left-color: #8b5cf6">
+        <h3><span>🎬</span> Recommendations</h3>
+        <div class="desc">Multi-domain preferences (movies, books, music, series, art, boardgames)</div>
+        <div class="task">Retrieve &amp; reason over user preferences</div>
+        <div class="file-count">56 data files</div>
+      </div>
+<div class="cat-card" style="border-left-color: #10b981">
+        <h3><span>🌳</span> Tree-Based</h3>
+        <div class="desc">Colleague relationship graphs with varying depth</div>
+        <div class="task">Graph traversal &amp; relationship reasoning</div>
+        <div class="file-count">23 data files</div>
+      </div>
+<div class="cat-card" style="border-left-color: #ef4444">
+        <h3><span>🧠</span> Mem-Agent Eval</h3>
+        <div class="desc">Structured markdown memory with entity-based organization</div>
+        <div class="task">Memory CRUD: retrieval, update, filter, clarification</div>
+        <div class="file-count">12 data files</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">📊 Distribution Charts</h2>
+    <div class="two-col">
+      <div class="chart-container">
+        <div class="chart-title">Files per Category</div>
+        <div class="bar-group">
+          <div class="bar-label">Accounting</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 26%; background: #f59e0b">15</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">State Machine Location</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 62%; background: #3b82f6">35</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">Recommendations</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: #8b5cf6">56</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">Tree-Based</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 41%; background: #10b981">23</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">Mem-Agent Eval</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 21%; background: #ef4444">12</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="chart-container">
+        <div class="chart-title">Recommendation Domains</div>
+        <div class="bar-group">
+          <div class="bar-label">Art</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: #f59e0b">7</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">Boardgames</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: #10b981">7</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">Books</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: #3b82f6">7</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">Movies</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: #8b5cf6">7</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">Music</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: #ef4444">7</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">Series</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: #06b6d4">7</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="chart-container">
+        <div class="chart-title">Mem-Agent Eval Types</div>
+        <div class="bar-group">
+          <div class="bar-label">Retrieval</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: #3b82f6">4</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">Update</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 75%; background: #10b981">3</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">Filter</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 50%; background: #f59e0b">2</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">Clarification</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 75%; background: #8b5cf6">3</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="chart-container">
+        <div class="chart-title">Accounting Scale Variants</div>
+        <div class="bar-group">
+          <div class="bar-label">10 entries</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: #f59e0b">5</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">30 entries</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: #f59e0b">5</div>
+          </div>
+        </div>
+<div class="bar-group">
+          <div class="bar-label">50 entries</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: 100%; background: #f59e0b">5</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">🤖 Memory Systems Evaluated</h2>
+    <div class="sys-grid">
+      <div class="sys-card"><h4>📚 mem0 RAG (top-k)</h4><p>Vector database retrieval with configurable top-k. Uses Qdrant for embedding storage and OpenAI embeddings. Tests how well flat vector search handles structured memory.</p></div>
+      <div class="sys-card"><h4>🔧 mem0 Agent</h4><p>Tool-calling agent with add/search/update/delete memory operations. The agent actively manages its own memory through function calls. Configurable iterations and search limits.</p></div>
+      <div class="sys-card"><h4>📝 mem-agent (Structured)</h4><p>Structured markdown file-based memory. Organizes information in user.md profile files and per-entity markdown documents. Tests if structured memory outperforms flat retrieval.</p></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">🔬 Data Samples</h2>
+
+    <div class="sample-card">
+      <h4>💰 Accounting — Debt Settlement</h4>
+      <div class="case-id">Case: accounting_10%_1 | Messages: 50 | Sessions: 1</div>
+      <div class="msg-bubble msg-user"><div class="msg-role">user</div>Alice: Paid €179 for museum - split with Bob</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>Alice: Paid €146 for groceries - split among all</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>Bob: Paid €107 for dinner - split among all</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>Alice: Paid €88 for hotel - split among all</div>
+      <div class="query-box"><div class="query-label">Query</div>Based on the memories from our previous dialogs, calculate for each person their total spending and determine who owes money to whom for settlement. Provide a final settlement plan showing all necessary transactions to clear all debts. Format your answer as a concise list of transactions only, using</div>
+      <div class="query-box" style="border-color: #238636;"><div class="query-label" style="color: #3fb950;">Reference Answer</div>Settlement: Charlie -&gt; Bob : 218.33 EUR, Alice -&gt; Bob : 24.83 EUR</div>
+    </div>
+
+    <div class="sample-card">
+      <h4>🗺️ State Machine Location — Life Events</h4>
+      <div class="case-id">Case: static_001 | Sessions: 3</div>
+      <div class="msg-bubble msg-user"><div class="msg-role">user</div>I live in Lisbon, Alfama.</div><div class="msg-bubble msg-assistant"><div class="msg-role">assistant</div>That&#x27;s a beautiful area! How do you like living there?</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>I have a pastel de nata at the corner bakery every morning.</div><div class="msg-bubble msg-assistant"><div class="msg-role">assistant</div>Sounds delicious! Do you have a favorite flavor?</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>I enjoy watching the sunset from Miradouro da Senhora do Monte.</div>
+      <div class="query-box"><div class="query-label">Task</div>Track location changes through life events (moves, jobs, relationships) and recall current city after transitions.</div>
+    </div>
+
+    <div class="sample-card">
+      <h4>🎬 Recommendations — Movie Preferences</h4>
+      <div class="case-id">Case: recommendations_movies_275 | Sessions: 27</div>
+      <div class="msg-bubble msg-user"><div class="msg-role">user</div>Just rewatched Terminator 2 last night. Still holds up perfectly.</div><div class="msg-bubble msg-assistant"><div class="msg-role">assistant</div>You&#x27;ve got great taste—what&#x27;s your favorite part of T2?</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>The truck chase scene. The danger feels real, not like weightless CGI.</div><div class="msg-bubble msg-assistant"><div class="msg-role">assistant</div>You&#x27;re right—they used real vehicles and miniatures. What do you think of the T-1000?</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>Robert Patrick was terrifying. That liquid metal effect still beats modern CGI. But Arnold is what makes the movie—his presence, his one-liners.</div><div class="msg-bubble msg-assistant"><div class="msg-role">assistant</div>Do you prefer his villain role in the first movie or the hero in T2?</div>
+      <div class="query-box"><div class="query-label">Embedded Fact</div>"Terminator 2 is still the gold standard for action films. Schwarzenegger at his absolute peak"</div>
+    </div>
+
+    <div class="sample-card">
+      <h4>🌳 Tree-Based — Colleague Relationships</h4>
+      <div class="case-id">Case: graph_0_trimmed_250</div>
+      <div class="msg-bubble msg-user"><div class="msg-role">user</div>Johnny Fisher works with Christopher Peterson.</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>Christopher Peterson is a colleague of Kathleen Herrera.</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>Kathleen Herrera works with Linda Brooks.</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>Linda Brooks is a colleague of Amanda Myers.</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>Amanda Myers works with Janet Edwards.</div><div class="msg-bubble msg-user"><div class="msg-role">user</div>Janet Edwards is a colleague of Cynthia Scott.</div>
+      <div class="query-box"><div class="query-label">Sample Query</div>Are Brenda Nguyen and Johnny Fisher related to each other at work through colleagues relations?</div>
+      <div class="query-box" style="border-color: #238636;"><div class="query-label" style="color: #3fb950;">Reference Answer</div>Yes, they are indirect colleagues according to their graph relations.</div>
+    </div>
+
+    <div class="sample-card">
+      <h4>🧠 Mem-Agent Eval — Structured Memory Retrieval</h4>
+      <div class="case-id">User profile (user.md) with structured markdown memory</div>
+      <div class="query-box"><div class="query-label">User Memory (excerpt)</div><pre style="color: #c9d1d9; font-size: 0.85em; white-space: pre-wrap; margin: 0;"># Aleksandr Petrov
+
+## Basic Information
+- **Name**: Aleksandr Petrov
+- **Age**: 45
+- **Gender**: Male
+- **Birthplace**: Kaliningrad, Russia
+- **Occupation**: Investment Banking Director
+
+## Education
+- Economics at Moscow State University
+- MBA from London Business School</pre></div>
+      <div class="query-box"><div class="query-label">Sample Q&A</div><div style="margin: 6px 0;"><strong>Q:</strong> How long do I have for my 50th birthday party planning?</div><div><strong>A:</strong> You have 5 years to plan your 50th birthday party.</div></div>
+      <div class="query-box"><div style="margin: 6px 0;"><strong>Q:</strong> Where am I from originally?</div><div><strong>A:</strong> <em style="color: #f59e0b;">Open-ended inference required</em></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">📋 Schema Reference</h2>
+    <table class="schema-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>case_id</code></td><td>string</td><td>Unique identifier for the test case</td><td>"accounting_10%_1", "static_001"</td></tr>
+        <tr><td><code>sessions</code></td><td>array</td><td>Array of conversation sessions with messages</td><td>[&#123;session_id, topic, messages[]&#125;]</td></tr>
+        <tr><td><code>sessions[].messages</code></td><td>array</td><td>Role-content pairs (user/assistant)</td><td>[&#123;role: "user", content: "..."&#125;]</td></tr>
+        <tr><td><code>queries</code></td><td>array</td><td>Evaluation questions with reference answers</td><td>[&#123;question, reference_answer&#125;]</td></tr>
+        <tr><td><code>queries[].reference_answer</code></td><td>object/array</td><td>Ground truth for evaluation</td><td>&#123;text: "Berlin"&#125; or [&#123;text: "..."&#125;]</td></tr>
+        <tr><td><code>contains_fact</code></td><td>boolean</td><td>(Recommendations) Whether session embeds a testable fact</td><td>true</td></tr>
+        <tr><td><code>fact_id</code></td><td>string</td><td>(Recommendations) Identifier for the embedded fact</td><td>"terminator2_favorite"</td></tr>
+        <tr><td><code>fact_quote</code></td><td>string</td><td>(Recommendations) Exact quote to remember</td><td>"Terminator 2 is still the gold standard..."</td></tr>
+      </tbody>
+    </table>
+    <h3 style="color: #e1e4e8; margin: 30px 0 15px;">dataset.yaml Schema</h3>
+    <table class="schema-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>collection_name</code></td><td>string</td><td>Qdrant vector DB collection prefix</td></tr>
+        <tr><td><code>user_id</code></td><td>string</td><td>mem0 user identifier for isolation</td></tr>
+        <tr><td><code>prompts.mem0_agent.loading</code></td><td>path</td><td>System prompt for memory loading phase</td></tr>
+        <tr><td><code>prompts.mem0_agent.query</code></td><td>path</td><td>System prompt for query phase</td></tr>
+        <tr><td><code>prompts.mem_agent.system_prompt</code></td><td>path</td><td>mem-agent system prompt</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">💡 Key Insights</h2>
+    <div class="cat-grid">
+      <div class="cat-card" style="border-left-color: #58a6ff;">
+        <h3>🎯 Core Research Question</h3>
+        <div class="desc">Does structured memory (entity-based markdown) outperform flat vector retrieval (RAG) for LLM agents? StructMemEval systematically tests this across diverse task types.</div>
+      </div>
+      <div class="cat-card" style="border-left-color: #f59e0b;">
+        <h3>📐 Scaling Dimensions</h3>
+        <div class="desc">Each category tests different scaling axes: accounting varies entry count (10/30/50), recommendations vary item count (100-350), tree-based varies graph depth, state machine varies transition count.</div>
+      </div>
+      <div class="cat-card" style="border-left-color: #10b981;">
+        <h3>🔍 Noise Injection</h3>
+        <div class="desc">Datasets include distractor messages (e.g., "The music makes this trip special!" in accounting) to test whether memory systems can filter signal from noise.</div>
+      </div>
+      <div class="cat-card" style="border-left-color: #8b5cf6;">
+        <h3>⚖️ Multi-Answer Tolerance</h3>
+        <div class="desc">Many queries accept multiple reference answers (e.g., different valid debt settlement plans), testing for semantic equivalence rather than exact string matching.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Generated from <a href="https://github.com/yandex-research/StructMemEval" style="color: #58a6ff;">yandex-research/StructMemEval</a> | Paper: <a href="https://arxiv.org/abs/2602.11243" style="color: #58a6ff;">ArXiv 2602.11243</a></p>
+    <p style="margin-top: 8px;">Report generated on 2026-05-18</p>
+  </div>
+</div>
+</body>
+</html>
